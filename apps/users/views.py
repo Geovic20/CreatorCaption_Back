@@ -19,7 +19,8 @@ class RegisterView(APIView):
         return Response({
             "user": {
                 "email": user.email,
-                "full_name": user.full_name
+                "first_name": user.first_name,
+                "last_name": user.last_name,
             },
             "access": str(refresh.access_token),
             "refresh": str(refresh)
