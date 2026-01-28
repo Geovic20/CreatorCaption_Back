@@ -46,3 +46,13 @@ class LoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Identifiants invalides")
         return user
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+        )

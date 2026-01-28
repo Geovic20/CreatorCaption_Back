@@ -6,7 +6,6 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = env("SECRET_KEY", default="unsafe-secret")
