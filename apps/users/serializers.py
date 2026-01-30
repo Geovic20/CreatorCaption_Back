@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
+from django.contrib.auth.password_validation import validate_password
 
+# Serializers pour l'inscription
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
@@ -33,7 +35,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-
+# Serializers pour la connexion
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -47,6 +49,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Identifiants invalides")
         return user
 
+# Serializers pour la récupération des données de l'utilisateur
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -56,3 +59,22 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
         )
+
+# Serializers pour le changement de mot de passe
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    new_password_confirm = serializers.CharField(required=True)
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Ancien mot de passe incorrect")
+        return value
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError("Les mots de passe ne correspondent pas")
+
+        validate_password(attrs['new_password'], self.context['request'].user)
+        return attrs

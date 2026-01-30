@@ -4,8 +4,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ChangePasswordSerializer
 
+# Vues pour l'inscription
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -26,7 +27,7 @@ class RegisterView(APIView):
             "refresh": str(refresh)
         }, status=status.HTTP_201_CREATED)
 
-
+# Vue pour la connexion
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -42,9 +43,33 @@ class LoginView(APIView):
             "refresh": str(refresh)
         })
 
+# Vue pour récupérer les données de l'utilisateur
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+# Vue pour le changement de mot de passe
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        if serializer.is_valid():
+            user = request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+
+            return Response(
+                {"detail": "Mot de passe modifié avec succès"},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
