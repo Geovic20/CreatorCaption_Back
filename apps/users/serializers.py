@@ -1,7 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.contrib.auth.tokens import default_token_generator
+
+# Récupération du modèle d'utilisateur
+User = get_user_model()
 
 # Serializers pour l'inscription
 class RegisterSerializer(serializers.ModelSerializer):
@@ -71,6 +78,29 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Ancien mot de passe incorrect")
         return value
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError("Les mots de passe ne correspondent pas")
+
+        validate_password(attrs['new_password'], self.context['request'].user)
+        return attrs
+
+# Serializers pour la demande de réinitialisation de mot de passe
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Aucun utilisateur avec cet email.")
+        return value
+
+# Serializers pour la confirmation du nouveau mot de passe
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=8)
+    new_password_confirm = serializers.CharField(required=True, min_length=8)
 
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password_confirm']:

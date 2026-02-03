@@ -1,10 +1,18 @@
 from rest_framework.views import APIView
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ChangePasswordSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ChangePasswordSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+
+User = get_user_model()
+token_generator = PasswordResetTokenGenerator()
 
 # Vues pour l'inscription
 class RegisterView(APIView):
@@ -72,4 +80,52 @@ class ChangePasswordView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Vue pour la demande de réinitialisation de mot de passe
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user =  User.objects.get(email=serializer.validated_data["email"])
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
+
+        reset_link = f"http://localhost:3000/reset-password/{uid}/{token}/"
+
+        send_mail(
+            subject="Réinitialisation de votre mot de passe",
+            message=f"Cliquez sur ce lien pour réinitialiser votre mot de passe : {reset_link}",
+            from_email="[EMAIL_ADDRESS]",
+            recipient_list=[user.email],
+        )
+
+        return Response({
+            "detail": "Lien de réinitialisation envoyé"
+        }, status=status.HTTP_200_OK)
+
+# Vue pour la confirmation du nouveau mot de passe
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(serializer.validated_data["uid"]))
+            user = User.objects.get(pk=uid)
+        except Exception as e:
+            return Response({"detail": "Lien invalide"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not token_generator.check_token(user, serializer.validated_data["token"]):
+            return Response({"detail": "Lien invalide ou expiré"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+        
+        return Response({"detail": "Mot de passe modifié avec succès"}, status=status.HTTP_200_OK)
+        
         
