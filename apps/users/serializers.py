@@ -65,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "created_at",
         )
 
 # Serializers pour le changement de mot de passe

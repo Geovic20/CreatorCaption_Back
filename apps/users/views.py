@@ -2,7 +2,8 @@ from rest_framework.views import APIView
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -127,5 +128,34 @@ class PasswordResetConfirmView(APIView):
         user.save()
         
         return Response({"detail": "Mot de passe modifié avec succès"}, status=status.HTTP_200_OK)
-        
-        
+
+# Fonctions utilitaires pour l'envoi d'emails
+def build_reset_password_link(request, uid, token):
+    frontend_url = settings.FRONTEND_URL  # ex: https://creatorcaption.com
+    return f"{frontend_url}/reset-password/{uid}/{token}"
+
+# Fonction pour envoyer l'email de réinitialisation de mot de passe    
+def send_reset_password_email(user, uid, token):
+    reset_link = build_reset_link(None, uid, token)
+
+    subject = "Réinitialisation de votre mot de passe – CreatorCaption"
+    from_email = "CreatorCaption <no-reply@creatorcaption.com>"
+    to = [user.email]
+
+    html_content = render_to_string(
+        "emails/reset_password.html",
+        {"reset_link": reset_link}
+    )
+
+    text_content = f"""
+    Réinitialisation de mot de passe
+
+    Utilisez ce lien pour définir un nouveau mot de passe :
+    {reset_link}
+
+    Ce lien est valable 24 heures.
+    """
+
+    email = EmailMultiAlternatives(subject, text_content, from_email, to)
+    email.attach_alternative(html_content, "text/html")
+    email.send()

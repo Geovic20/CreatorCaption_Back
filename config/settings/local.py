@@ -11,3 +11,5 @@ DATABASES = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
