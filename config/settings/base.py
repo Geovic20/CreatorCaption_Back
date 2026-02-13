@@ -25,12 +25,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.users",
+    "apps.ai_engine",
 
     # Third-party
     "rest_framework",
     "corsheaders",
-
-    # Local apps (à venir)
 ]
 
 MIDDLEWARE = [
