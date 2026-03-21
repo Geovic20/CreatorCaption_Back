@@ -23,8 +23,8 @@ def generate_captions_view(request):
             topic=serializer.validated_data["topic"],
             platform=serializer.validated_data["platform"],
             tone=serializer.validated_data["tone"],
-            length=serializer.validated_data.get("length", "medium"),
-            cta=serializer.validated_data.get("cta", ""),
+            length=serializer.validated_data.get("length") or "medium",
+            cta=serializer.validated_data.get("cta") or "",
         )
 
         # Sauvegarde en attente
@@ -33,8 +33,8 @@ def generate_captions_view(request):
             topic=serializer.validated_data["topic"],
             platform=serializer.validated_data["platform"],
             tone=serializer.validated_data["tone"],
-            length=serializer.validated_data.get("length", "medium"),
-            cta=serializer.validated_data.get("cta", ""),
+            length=serializer.validated_data.get("length") or "medium",
+            cta=serializer.validated_data.get("cta") or "",
             results={"captions": captions},
         )
 
@@ -47,9 +47,11 @@ def generate_captions_view(request):
             status=status.HTTP_201_CREATED,
         )
 
-    except Exception:
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return Response(
-            {"error": "Erreur lors de la génération. Veuillez réessayer."},
+            {"error": f"Erreur lors de la génération: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
