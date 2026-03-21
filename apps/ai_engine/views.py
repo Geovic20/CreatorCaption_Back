@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from .models import CaptionGeneration
 from .serializers import CaptionGenerationSerializer
-from .services.openai_services import generate_captions
+from .services.ai_router import AIRouter
 
 # Génération de légendes
 @api_view(["POST"])
@@ -18,11 +18,12 @@ def generate_captions_view(request):
 
     # Appel IA
     try:
-        captions = generate_captions(
+        provider = AIRouter.get_provider()
+        captions = provider.generate_captions(
             topic=serializer.validated_data["topic"],
             platform=serializer.validated_data["platform"],
             tone=serializer.validated_data["tone"],
-        )
+)
 
         # Sauvegarde en attente
         db_entry = CaptionGeneration.objects.create(

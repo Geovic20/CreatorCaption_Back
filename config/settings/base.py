@@ -81,3 +81,8 @@ SIMPLE_JWT = {
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
+
+AI_PROVIDER = env("AI_PROVIDER", default="gemini")
+
