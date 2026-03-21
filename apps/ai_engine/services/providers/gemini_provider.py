@@ -14,12 +14,22 @@ class GeminiProvider(BaseAIProvider):
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
         self.model_name = "gemini-1.5-flash"
 
-    def generate_captions(self, topic: str, platform: str, tone: str) -> list:
+    def generate_captions(self, topic: str, platform: str, tone: str, length: str = "medium", cta: str = "") -> list:
         prompt = f"""
         Génère 5 légendes créatives optimisées pour {platform}.
         Sujet : {topic}
         Ton : {tone}
-        Utilise des emojis et un call-to-action à la fin de chaque légende.
+        Longueur souhaitée : {length}
+        Call-to-action spécifique (si fourni) : {cta}
+        
+        Règles :
+        - Utilise des emojis.
+        - Si un CTA est fourni, utilise-le ou adapte-le à la fin. Sinon, crée un CTA pertinent.
+        - Respecte le ton demandé.
+        - Pour la longueur : 
+            - 'short': 1-2 phrases.
+            - 'medium': un paragraphe court.
+            - 'long': plusieurs paragraphes avec du storytelling.
         """
 
         try:

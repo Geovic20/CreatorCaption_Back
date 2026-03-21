@@ -23,7 +23,9 @@ def generate_captions_view(request):
             topic=serializer.validated_data["topic"],
             platform=serializer.validated_data["platform"],
             tone=serializer.validated_data["tone"],
-)
+            length=serializer.validated_data.get("length", "medium"),
+            cta=serializer.validated_data.get("cta", ""),
+        )
 
         # Sauvegarde en attente
         db_entry = CaptionGeneration.objects.create(
@@ -31,6 +33,8 @@ def generate_captions_view(request):
             topic=serializer.validated_data["topic"],
             platform=serializer.validated_data["platform"],
             tone=serializer.validated_data["tone"],
+            length=serializer.validated_data.get("length", "medium"),
+            cta=serializer.validated_data.get("cta", ""),
             results={"captions": captions},
         )
 

@@ -24,6 +24,8 @@ class CaptionGeneration(models.Model):
     topic = models.CharField(max_length=255)
     platform = models.CharField(max_length=50, choices=PLATFORM_CHOICES)
     tone = models.CharField(max_length=50, choices=TONE_CHOICES)
+    length = models.CharField(max_length=20, default="medium")
+    cta = models.CharField(max_length=255, blank=True, null=True)
 
     results = models.JSONField()  # stocke les 3-5 captions
 
