@@ -10,9 +10,10 @@ class CaptionGeneration(models.Model):
 
     TONE_CHOICES = [
         ("fun", "Fun"),
-        ("professional", "Professional"),
-        ("motivation", "Motivation"),
-        ("storytelling", "Storytelling"),
+        ("pro", "Professionnel"),
+        ("inspire", "Inspirant"),
+        ("educ", "Éducatif"),
+        ("story", "Storytelling"),
     ]
 
     user = models.ForeignKey(

@@ -19,10 +19,19 @@ class GeminiProvider(BaseAIProvider):
         self.model_name = "gemini-2.5-flash"
 
     def generate_captions(self, topic: str, platform: str, tone: str, length: str = "medium", cta: str = "") -> list:
+        tone_map = {
+            "fun": "Fun",
+            "pro": "Professionnel",
+            "inspire": "Inspirant",
+            "educ": "Éducatif",
+            "story": "Storytelling"
+        }
+        human_tone = tone_map.get(tone, tone)
+        
         prompt = f"""
         Génère 5 légendes créatives optimisées pour {platform}.
         Sujet : {topic}
-        Ton : {tone}
+        Ton : {human_tone}
         Longueur souhaitée : {length}
         Call-to-action spécifique (si fourni) : {cta}
         
