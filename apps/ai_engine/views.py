@@ -2,6 +2,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import CaptionGeneration
 from .serializers import CaptionGenerationSerializer
@@ -15,6 +17,27 @@ def generate_captions_view(request):
 
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # Vérification du Quota avant génération
+    user_plan = 'free'
+    if hasattr(request.user, 'subscription'):
+        user_plan = request.user.subscription.plan
+
+    if user_plan == 'free':
+        one_week_ago = timezone.now() - timedelta(days=7)
+        generation_count = CaptionGeneration.objects.filter(
+            user=request.user,
+            created_at__gte=one_week_ago
+        ).count()
+
+        if generation_count >= 10:
+            return Response(
+                {
+                    "error": "Quota dépassé. Limite de 10 générations par semaine atteinte pour les comptes gratuits.",
+                    "code": "QUOTA_EXCEEDED"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
 
     # Appel IA
     try:
