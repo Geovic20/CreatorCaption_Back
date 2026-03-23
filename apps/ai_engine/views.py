@@ -1,13 +1,16 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth import get_user_model
 
 from .models import CaptionGeneration
 from .serializers import CaptionGenerationSerializer
 from .services.ai_router import AIRouter
+
+User = get_user_model()
 
 # Génération de légendes
 @api_view(["POST"])
@@ -107,4 +110,29 @@ def quota_stats_view(request):
         "limit": limit,
         "remaining": max(0, limit - used),
         "plan": user_plan
+    })
+
+# Statistiques Administrateur
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def admin_stats_view(request):
+    today = timezone.now().date()
+    one_week_ago = timezone.now() - timedelta(days=7)
+    
+    total_users = User.objects.count()
+    total_generations = CaptionGeneration.objects.count()
+    
+    new_users_today = User.objects.filter(created_at__date=today).count()
+    generations_today = CaptionGeneration.objects.filter(created_at__date=today).count()
+    
+    # Simulation revenus (à lier avec Stripe plus tard)
+    total_revenue = 0
+    
+    return Response({
+        "total_users": total_users,
+        "total_generations": total_generations,
+        "total_revenue": total_revenue,
+        "new_users_today": new_users_today,
+        "generations_today": generations_today,
+        "conversion_rate": 0
     })
