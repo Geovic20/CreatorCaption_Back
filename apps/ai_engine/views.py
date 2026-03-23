@@ -85,3 +85,26 @@ def history_view(request):
     generations = CaptionGeneration.objects.filter(user=request.user)
     serializer = CaptionGenerationSerializer(generations, many=True)
     return Response(serializer.data)
+
+# Statistiques de quota
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def quota_stats_view(request):
+    user_plan = 'free'
+    if hasattr(request.user, 'subscription'):
+        user_plan = request.user.subscription.plan
+
+    limit = 10 if user_plan == 'free' else 100 # Exemple de limite pour pro
+    
+    one_week_ago = timezone.now() - timedelta(days=7)
+    used = CaptionGeneration.objects.filter(
+        user=request.user,
+        created_at__gte=one_week_ago
+    ).count()
+
+    return Response({
+        "used": used,
+        "limit": limit,
+        "remaining": max(0, limit - used),
+        "plan": user_plan
+    })
