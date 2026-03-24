@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
-
 from .models import CaptionGeneration
 from .serializers import CaptionGenerationSerializer
 from .services.ai_router import AIRouter
+from apps.billing.models import Subscription
 
 User = get_user_model()
 
@@ -128,11 +128,31 @@ def admin_stats_view(request):
     # Simulation revenus (à lier avec Stripe plus tard)
     total_revenue = 0
     
+    # Récupérer les 10 derniers utilisateurs inscrits
+    recent_users_list = []
+    recent_users = User.objects.all().order_by('-created_at')[:10]
+    
+    for user in recent_users:
+        plan = 'free'
+        if hasattr(user, 'subscription'):
+            plan = user.subscription.plan
+            
+        recent_users_list.append({
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "plan": plan,
+            "is_staff": user.is_staff,
+            "created_at": user.created_at.strftime("%d/%m/%Y %H:%M")
+        })
+
     return Response({
         "total_users": total_users,
         "total_generations": total_generations,
         "total_revenue": total_revenue,
         "new_users_today": new_users_today,
         "generations_today": generations_today,
-        "conversion_rate": 0
+        "conversion_rate": 0,
+        "recent_users": recent_users_list
     })
