@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.users",
     "apps.ai_engine",
+    "apps.billing",
 
     # Third-party
     "rest_framework",
